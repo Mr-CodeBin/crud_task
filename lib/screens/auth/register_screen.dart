@@ -65,9 +65,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (success) {
         SuccessSnackbar.show(context, message: 'Registration successful!');
-        
+
         await Future.delayed(const Duration(milliseconds: 200));
-        
+
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const TaskListScreen()),
@@ -83,12 +83,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
 
         String errorMsg = authProvider.error ?? 'Registration failed';
-        if (errorMsg.contains('already exists') || errorMsg.contains('duplicate')) {
-          errorMsg = 'This email is already registered. Please use a different email.';
-        } else if (errorMsg.contains('Connection refused') || 
-                   errorMsg.contains('Failed host lookup')) {
-          errorMsg = 'Cannot connect to server. Please check if the backend is running.';
-        } else if (errorMsg.contains('400') || errorMsg.contains('Bad Request')) {
+
+        // Check for 409 status code or "already exists" message
+        if (errorMsg.contains('409') ||
+            errorMsg.contains('already exists') ||
+            errorMsg.contains('duplicate') ||
+            errorMsg.toLowerCase().contains('user with this email')) {
+          errorMsg =
+              'User already exists with this email. Go and try to login.';
+        } else if (errorMsg.contains('Connection refused') ||
+            errorMsg.contains('Failed host lookup')) {
+          errorMsg =
+              'Cannot connect to server. Please check if the backend is running.';
+        } else if (errorMsg.contains('400') ||
+            errorMsg.contains('Bad Request')) {
           errorMsg = 'Invalid input. Please check your information.';
         }
 
@@ -108,11 +116,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       String errorMsg = e.toString().replaceAll('Exception: ', '');
-      if (errorMsg.contains('Connection refused') || 
+
+      // Check for 409 status code or "already exists" message
+      if (errorMsg.contains('409') ||
+          errorMsg.contains('already exists') ||
+          errorMsg.contains('duplicate') ||
+          errorMsg.toLowerCase().contains('user with this email')) {
+        errorMsg = 'User already exists with this email. Go and try to login.';
+      } else if (errorMsg.contains('Connection refused') ||
           errorMsg.contains('Failed host lookup')) {
-        errorMsg = 'Cannot connect to server. Please check if the backend is running.';
-      } else if (errorMsg.contains('already exists') || errorMsg.contains('duplicate')) {
-        errorMsg = 'This email is already registered. Please use a different email.';
+        errorMsg =
+            'Cannot connect to server. Please check if the backend is running.';
       }
 
       setState(() => _errorMessage = errorMsg);
@@ -137,16 +151,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               right: 0,
               height: screenHeight * 0.35,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppTheme.appBlack,
-                ),
+                decoration: const BoxDecoration(color: AppTheme.appBlack),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       const SizedBox(height: 20),
@@ -227,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildForm(ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -240,18 +255,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: isDark 
-                    ? theme.textTheme.bodyMedium?.color?.withOpacity(0.9)
-                    : theme.textTheme.bodyMedium?.color,
+                color:
+                    isDark
+                        ? theme.textTheme.bodyMedium?.color?.withOpacity(0.9)
+                        : theme.textTheme.bodyMedium?.color,
               ),
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              style: TextStyle(
-                color: theme.textTheme.bodyLarge?.color,
-              ),
+              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
               decoration: InputDecoration(
                 hintText: 'Enter your email',
                 hintStyle: TextStyle(
@@ -281,12 +295,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 filled: true,
-                fillColor: isDark 
-                    ? theme.cardColor.withOpacity(0.5)
-                    : Colors.grey.shade50,
+                fillColor:
+                    isDark
+                        ? theme.cardColor.withOpacity(0.5)
+                        : Colors.grey.shade50,
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter your email';
+                if (value == null || value.isEmpty)
+                  return 'Please enter your email';
                 if (!value.contains('@')) return 'Please enter a valid email';
                 return null;
               },
@@ -303,18 +319,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: isDark 
-                    ? theme.textTheme.bodyMedium?.color?.withOpacity(0.9)
-                    : theme.textTheme.bodyMedium?.color,
+                color:
+                    isDark
+                        ? theme.textTheme.bodyMedium?.color?.withOpacity(0.9)
+                        : theme.textTheme.bodyMedium?.color,
               ),
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
-              style: TextStyle(
-                color: theme.textTheme.bodyLarge?.color,
-              ),
+              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
               decoration: InputDecoration(
                 hintText: 'Create a password',
                 hintStyle: TextStyle(
@@ -326,10 +341,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _isPasswordVisible
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
                   ),
-                  onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                  onPressed:
+                      () => setState(
+                        () => _isPasswordVisible = !_isPasswordVisible,
+                      ),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -351,13 +371,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 filled: true,
-                fillColor: isDark 
-                    ? theme.cardColor.withOpacity(0.5)
-                    : Colors.grey.shade50,
+                fillColor:
+                    isDark
+                        ? theme.cardColor.withOpacity(0.5)
+                        : Colors.grey.shade50,
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter a password';
-                if (value.length < 6) return 'Password must be at least 6 characters';
+                if (value == null || value.isEmpty)
+                  return 'Please enter a password';
+                if (value.length < 6)
+                  return 'Password must be at least 6 characters';
                 return null;
               },
             ),
@@ -373,18 +396,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: isDark 
-                    ? theme.textTheme.bodyMedium?.color?.withOpacity(0.9)
-                    : theme.textTheme.bodyMedium?.color,
+                color:
+                    isDark
+                        ? theme.textTheme.bodyMedium?.color?.withOpacity(0.9)
+                        : theme.textTheme.bodyMedium?.color,
               ),
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: !_isConfirmPasswordVisible,
-              style: TextStyle(
-                color: theme.textTheme.bodyLarge?.color,
-              ),
+              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
               decoration: InputDecoration(
                 hintText: 'Confirm your password',
                 hintStyle: TextStyle(
@@ -396,10 +418,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isConfirmPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _isConfirmPasswordVisible
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
                   ),
-                  onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                  onPressed:
+                      () => setState(
+                        () =>
+                            _isConfirmPasswordVisible =
+                                !_isConfirmPasswordVisible,
+                      ),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -421,13 +450,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 filled: true,
-                fillColor: isDark 
-                    ? theme.cardColor.withOpacity(0.5)
-                    : Colors.grey.shade50,
+                fillColor:
+                    isDark
+                        ? theme.cardColor.withOpacity(0.5)
+                        : Colors.grey.shade50,
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Please confirm your password';
-                if (value != _passwordController.text) return 'Passwords do not match';
+                if (value == null || value.isEmpty)
+                  return 'Please confirm your password';
+                if (value != _passwordController.text)
+                  return 'Passwords do not match';
                 return null;
               },
             ),
@@ -449,9 +481,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),
-            side: BorderSide(
-              color: theme.dividerColor.withOpacity(0.5),
-            ),
+            side: BorderSide(color: theme.dividerColor.withOpacity(0.5)),
             checkColor: Colors.white,
             fillColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
@@ -520,16 +550,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           elevation: 0,
         ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              )
-            : const Text(
-                'Register',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-              ),
+        child:
+            _isLoading
+                ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : const Text(
+                  'Register',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
       ),
     );
   }
@@ -537,11 +575,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildDivider(ThemeData theme) {
     return Row(
       children: [
-        Expanded(
-          child: Divider(
-            color: theme.dividerColor.withOpacity(0.3),
-          ),
-        ),
+        Expanded(child: Divider(color: theme.dividerColor.withOpacity(0.3))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -552,11 +586,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
-        Expanded(
-          child: Divider(
-            color: theme.dividerColor.withOpacity(0.3),
-          ),
-        ),
+        Expanded(child: Divider(color: theme.dividerColor.withOpacity(0.3))),
       ],
     );
   }
@@ -623,7 +653,7 @@ class _SocialButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isGoogle = label == 'Google';
-    
+
     return Material(
       color: isGoogle ? Colors.white : color,
       borderRadius: BorderRadius.circular(12),
@@ -662,11 +692,7 @@ class _SocialButton extends StatelessWidget {
                   ),
                 )
               else
-                Icon(
-                  icon,
-                  size: 24,
-                  color: Colors.white,
-                ),
+                Icon(icon, size: 24, color: Colors.white),
               const SizedBox(width: 8),
               Text(
                 label,
@@ -682,5 +708,3 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
-
-

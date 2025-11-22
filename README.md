@@ -2,6 +2,33 @@
 
 Full-stack task management application with Node.js/TypeScript backend and Flutter mobile frontend.
 
+## Visuals
+
+### Demo Video
+Watch the complete app demo: [Crud task app demo video 22-11-25.mp4](demo/Crud%20task%20app%20demo%20video%2022-11-25.mp4)
+
+### Download APK
+Download the release APK: [app-release.apk](demo/app-release.apk) (21MB)
+
+
+### Screenshots
+
+#### Authentication Screens
+ <img src="demo/images/Screenshot 2025-11-22 141107.png" alt="Login Screen" width="300"/>
+<img src="demo/images/Screenshot 2025-11-22 141112.png" alt="Register Screen" width="300"/>
+
+#### Task Management
+ <img src="demo/images/Screenshot 2025-11-22 141138.png" alt="Task Filters" width="300"/> <img src="demo/images/Screenshot 2025-11-22 141147.png" alt="Task Details" width="300"/>
+
+#### Task Operations
+<img src="demo/images/Screenshot 2025-11-22 141202.png" alt="Add Task" width="300"/> <img src="demo/images/Screenshot 2025-11-22 141209.png" alt="Edit Task" width="300"/> <img src="demo/images/Screenshot 2025-11-22 141225.png" alt="Task Status" width="300"/>
+
+#### Additional Features
+<img src="demo/images/Screenshot 2025-11-22 141237.png" alt="Search Tasks" width="300"/> <img src="demo/images/Screenshot 2025-11-22 141249.png" alt="Filter by Status" width="300"/> <img src="demo/images/Screenshot 2025-11-22 141318.png" alt="Task Management" width="300"/>
+
+
+
+
 ## Project Structure
 
 ```

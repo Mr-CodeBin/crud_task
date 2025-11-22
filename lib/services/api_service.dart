@@ -1,7 +1,18 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../services/token_service.dart';
+
+class _ApiException implements Exception {
+  final String message;
+  final int statusCode;
+
+  _ApiException(this.message, this.statusCode);
+
+  @override
+  String toString() => message;
+}
 
 class ApiService {
   static Future<http.Response> _request({
@@ -81,9 +92,30 @@ class ApiService {
         try {
           final errorData = jsonDecode(response.body);
           final errorMessage = errorData['message'] ?? 'An error occurred';
-          throw Exception(errorMessage);
+          // Store status code in exception for better error handling
+          throw _ApiException(errorMessage, response.statusCode);
         } catch (e) {
-          throw Exception('Request failed with status ${response.statusCode}');
+          if (e is _ApiException) {
+            rethrow;
+          }
+          // If JSON parsing fails, try to extract message from response body
+          final body = response.body;
+          if (body.isNotEmpty && body.contains('message')) {
+            try {
+              final errorMessage =
+                  jsonDecode(body)['message'] ?? 'An error occurred';
+              throw _ApiException(errorMessage, response.statusCode);
+            } catch (_) {
+              throw _ApiException(
+                'Request failed with status ${response.statusCode}',
+                response.statusCode,
+              );
+            }
+          }
+          throw _ApiException(
+            'Request failed with status ${response.statusCode}',
+            response.statusCode,
+          );
         }
       }
 
@@ -121,7 +153,7 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      print('Token refresh error: $e');
+      log('Token refresh error: $e');
       return false;
     }
   }

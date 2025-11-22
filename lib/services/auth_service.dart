@@ -8,23 +8,26 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await ApiService.post(
-      ApiConfig.register,
-      body: {
-        'email': email,
-        'password': password,
-      },
-      requiresAuth: false,
-    );
+    try {
+      final response = await ApiService.post(
+        ApiConfig.register,
+        body: {'email': email, 'password': password},
+        requiresAuth: false,
+      );
 
-    if (response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true) {
-        return AuthResponseModel.fromJson(data['data']);
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return AuthResponseModel.fromJson(data['data']);
+        }
       }
-    }
 
-    throw Exception(_getErrorMessage(response));
+      throw Exception(_getErrorMessage(response));
+    } catch (e) {
+      // Re-throw the exception with its original message
+      // The ApiService already provides user-friendly error messages
+      rethrow;
+    }
   }
 
   static Future<AuthResponseModel> login({
@@ -34,10 +37,7 @@ class AuthService {
     try {
       final response = await ApiService.post(
         ApiConfig.login,
-        body: {
-          'email': email,
-          'password': password,
-        },
+        body: {'email': email, 'password': password},
         requiresAuth: false,
       );
 
@@ -50,10 +50,12 @@ class AuthService {
 
       throw Exception(_getErrorMessage(response));
     } catch (e) {
-      if (e.toString().contains('Connection refused') || 
+      if (e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup') ||
           e.toString().contains('SocketException')) {
-        throw Exception('Cannot connect to server. Please check if the backend is running.');
+        throw Exception(
+          'Cannot connect to server. Please check if the backend is running.',
+        );
       }
       rethrow;
     }
@@ -62,8 +64,7 @@ class AuthService {
   static Future<void> logout() async {
     try {
       await ApiService.post(ApiConfig.logout);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   static String _getErrorMessage(response) {
@@ -75,4 +76,3 @@ class AuthService {
     }
   }
 }
-
